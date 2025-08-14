@@ -10,15 +10,16 @@ const teamId = ref<number>();
 const route = useRoute();
 const isLoading = ref(true);
 const currentTeam = ref<any>(null);
-const selectedFilter = ref("all"); // all, upcoming, completed
+const selectedFilter = ref("all");
 
 const findTeamData = () => {
   if (!teamId.value) return null;
 
-  for (const leagueData of Object.values(mockTeamsByLeague)) {
-    const team = leagueData.find((t) => t.team.id === teamId.value);
+  for (const leagueData of mockTeamsByLeague) {
+    const team = leagueData.teams.find((t) => t.id === teamId.value);
+    console.log("Team", JSON.stringify(team, null, 2));
     if (team) {
-      return team;
+      return { team };
     }
   }
   return null;

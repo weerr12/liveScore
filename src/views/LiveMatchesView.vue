@@ -12,11 +12,18 @@ import Top5league from "../components/live-match/Top5league.vue";
 import MatchCard from "../components/live-match/MatchCard.vue";
 import Standing from "../components/live-match/Standing.vue";
 import LeagueTeam from "../components/live-match/LeagueTeam.vue";
-import type { League, Team, TeamStanding, Fixture } from "@/types";
+import type {
+  League,
+  TeamStanding,
+  Fixture,
+  LeagueTeamType,
+  BaseTeam,
+} from "@/types";
 
 const leagues = ref<League[]>([]);
-const leagueTeams = ref<Record<number, Team[]>>({});
-const standings = ref<Record<number, TeamStanding[]>>({});
+// เปลี่ยนให้ตรง mockTeamsByLeague
+const leagueTeams = ref<LeagueTeamType[]>([]);
+const standings = ref<TeamStanding[]>([]);
 const fixturesToday = ref<Fixture[]>([]);
 const selectedLeagueId = ref<number>();
 const selectedTeamId = ref<number>();
@@ -32,6 +39,7 @@ const loadData = () => {
   fixturesToday.value = mockFixturesToday;
   leagueTeams.value = mockTeamsByLeague;
   standings.value = mockStandingsByLeague;
+
   isLoading.value = false;
 };
 
@@ -51,15 +59,27 @@ const filteredLeagues = computed(() =>
   )
 );
 
-// ถ้าเลือกลีกแล้ว → แสดงทีมในลีกนั้น, ถ้าไม่เลือก → default Premier League (39)
+// ถ้าเลือกลีกแล้ว → แสดงทีมในลีกนั้น, ถ้าไม่เลือก → default Premier League id -> 39
 const selectedLeagueTeams = computed(() => {
+  let teams: BaseTeam[] = [];
+
+  // user เลือกลีก
   if (selectedLeagueId.value) {
-    return leagueTeams.value[selectedLeagueId.value] ?? [];
+    const leagueData = leagueTeams.value.find(
+      (item) => item.league.id === selectedLeagueId.value
+    );
+    console.log("League Data:", JSON.stringify(leagueData, null, 2));
+    teams = leagueData?.teams || [];
+  } else {
+    const premierLeague = leagueTeams.value.find(
+      (item) => item.league.id === 39
+    );
+    teams = premierLeague?.teams || [];
   }
-  return leagueTeams.value[39] ?? [];
+  // console.log("Selected League Teams:", JSON.stringify(teams, null, 2));
+  return teams.map((team) => ({ team }));
 });
 
-// แสดงแมตช์วันนี้ของลีกที่เลือก
 const selectedLeagueFixtures = computed(() => {
   if (selectedLeagueId.value) {
     return fixturesToday.value.filter(
@@ -98,9 +118,20 @@ const handleTeamClick = (teamId: number) => {
 };
 
 const filteredResults = computed(() => {
-  return selectedLeagueId.value
-    ? leagueTeams.value[selectedLeagueId.value] ?? []
-    : [];
+  if (selectedLeagueId.value) {
+    const leagueData = leagueTeams.value.find(
+      (item) => item.league.id === selectedLeagueId.value
+    );
+    const teams = leagueData?.teams ?? [];
+    // console.log("Filtered Teams:", JSON.stringify(teams, null, 2));
+    const transformedTeams = teams.map((team) => ({ team }));
+    // console.log(
+    //   "Transformed Teams:",
+    //   JSON.stringify(transformedTeams, null, 2)
+    // );
+    return transformedTeams;
+  }
+  return [];
 });
 </script>
 
@@ -122,13 +153,11 @@ const filteredResults = computed(() => {
             @click="handleTeamClick"
             @search="(searchTerm) => console.log('Search:', searchTerm)"
           />
-          <!-- <pre>{{ filteredLeagues }}</pre> -->
           <Top5league
             :filteredLeagues="filteredLeagues"
             :selectedLeagueId="selectedLeagueId"
             @leagueClick="handleLeagueClick"
           />
-          <!-- <pre>{{ selectedLeagueTeams }}</pre> -->
           <LeagueTeam
             :selectedLeagueTeams="selectedLeagueTeams"
             @teamClick="handleTeamClick"
