@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { TeamStanding } from "../types";
+import type { StandingStats } from "../types";
 
 const props = defineProps<{
-  teamStandings: TeamStanding[];
+  teamStandings: StandingStats[];
   teamId?: number;
   findTeamLeague?: {
     id: number;

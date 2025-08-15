@@ -17,6 +17,17 @@ export interface BaseLeague {
     logo: string;
 }
 
+export interface LeagueTeamType {
+    league: BaseLeague;
+    country: { name: string };
+    teams: BaseTeam[];
+}
+
+export interface TeamStanding {
+    league: BaseLeague;
+    stats: StandingStats[];
+}
+
 export interface TeamStats {
     played: number;
     win: number;
@@ -30,6 +41,7 @@ export interface StandingStats extends TeamStats {
     rank: number;
     points: number;
     goalDiff: number;
+    team: BaseTeam;
 }
 
 export interface FixtureInfo {
@@ -44,10 +56,6 @@ export interface League {
 }
 
 export interface Team {
-    team: BaseTeam;
-}
-
-export interface TeamStanding extends StandingStats {
     team: BaseTeam;
 }
 

@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
-import { useRoute, RouterLink } from "vue-router";
+import { useRoute } from "vue-router";
 import {
   mockTeamsByLeague,
   mockLeagues,
-  mockFixturesToday,
   mockStandingsByLeague,
 } from "../mock-data";
 import TeamStandingForm from "../components/TeamStandingForm.vue";
+import type { LeagueTeamType, League } from "../types";
 
 const teamId = ref<number>();
-const leagues = ref<any[]>([]);
-const leagueTeams = ref<Record<number, any[]>>({});
+const leagues = ref<League[]>([]);
+const leagueTeams = ref<LeagueTeamType[]>([]);
 const currentTeam = ref<any>(null);
 const isLoading = ref(true);
 
@@ -20,10 +20,11 @@ const route = useRoute();
 const findTeamData = () => {
   if (!teamId.value) return null;
 
-  for (const leagueData of Object.values(mockTeamsByLeague)) {
-    const team = leagueData.find((t) => t.team.id === teamId.value);
+  for (const leagueData of mockTeamsByLeague) {
+    const team = leagueData.teams.find((t) => t.id === teamId.value);
     if (team) {
-      return team;
+      console.log("Found team:", team);
+      return { team };
     }
   }
   return null;
@@ -33,25 +34,27 @@ const teamName = computed(() => currentTeam.value?.team?.name);
 const teamLogo = computed(() => currentTeam.value?.team?.logo);
 
 const findTeamLeague = computed(() => {
-  if (!teamId.value) return null;
+  if (!teamId.value) return;
 
-  for (const leagueId in leagueTeams.value) {
-    const teams = leagueTeams.value[leagueId];
-    const foundTeam = teams.find((t) => t.team.id === teamId.value);
+  for (const leagueData of leagueTeams.value) {
+    const foundTeam = leagueData.teams.find((t: any) => t.id === teamId.value);
     if (foundTeam) {
       const leagueInfo = leagues.value.find(
-        (l) => l.league.id === parseInt(leagueId)
+        (l) => l.league.id === leagueData.league.id
       );
       return leagueInfo?.league;
     }
   }
-  return null;
+  return;
 });
 
 const teamStandings = computed(() => {
   const league = findTeamLeague.value;
   if (league?.id) {
-    return mockStandingsByLeague[league.id];
+    const leagueStanding = mockStandingsByLeague.find(
+      (standing) => standing.league.id === league.id
+    );
+    return leagueStanding?.stats ?? [];
   }
   return [];
 });

@@ -1,10 +1,20 @@
 <script setup lang="ts">
+import { computed } from "vue";
+import { RouterLink } from "vue-router";
 import type { TeamStanding } from "@/types";
 
 const props = defineProps<{
   selectedLeagueId?: number;
-  standings: Record<number, TeamStanding[]>;
+  standings: TeamStanding[];
 }>();
+
+const selectedLeagueStandings = computed(() => {
+  if (!props.selectedLeagueId) return [];
+  const leagueData = props.standings.find(
+    (standing) => standing.league.id === props.selectedLeagueId
+  );
+  return leagueData?.stats ?? [];
+});
 </script>
 
 <template>
@@ -48,7 +58,7 @@ const props = defineProps<{
         </thead>
         <tbody>
           <tr
-            v-for="(team, index) in standings[selectedLeagueId]"
+            v-for="(team, index) in selectedLeagueStandings"
             :key="team.team.id"
             class="hover:bg-gray-50 transition-colors border-b border-gray-100"
             :class="
@@ -56,7 +66,7 @@ const props = defineProps<{
                 ? 'bg-green-50'
                 : index < 6
                 ? 'bg-blue-50'
-                : index >= standings[selectedLeagueId].length - 3
+                : index >= selectedLeagueStandings.length - 3
                 ? 'bg-red-50'
                 : ''
             "
@@ -69,7 +79,7 @@ const props = defineProps<{
                     ? 'bg-green-500 text-white'
                     : index < 6
                     ? 'bg-blue-500 text-white'
-                    : index >= standings[selectedLeagueId].length - 3
+                    : index >= selectedLeagueStandings.length - 3
                     ? 'bg-red-500 text-white'
                     : 'bg-gray-200 text-gray-700'
                 "
