@@ -28,6 +28,7 @@ const fixturesToday = ref<Fixture[]>([]);
 const selectedLeagueId = ref<number>();
 const selectedTeamId = ref<number>();
 const isLoading = ref(false);
+const searchTerm = ref<string>("");
 
 const bigFiveLeagueIds = [39, 140, 135, 78, 61];
 
@@ -47,6 +48,7 @@ onMounted(loadData);
 
 watch(selectedLeagueId, () => {
   selectedTeamId.value = undefined;
+  searchTerm.value = "";
 });
 
 const filteredLeagues = computed(() =>
@@ -117,15 +119,30 @@ const handleTeamClick = (teamId: number) => {
   selectedTeamId.value = teamId;
 };
 
+const handleSearch = (search: string) => {
+  searchTerm.value = search;
+};
+
 const filteredResults = computed(() => {
+  let teams: BaseTeam[] = [];
+
+  // ถ้าเลือกลีก ให้ใช้ทีมในลีกนั้น, ถ้าไม่เลือก ให้ใช้ทีมทั้งหมด
   if (selectedLeagueId.value) {
     const leagueData = leagueTeams.value.find(
       (item) => item.league.id === selectedLeagueId.value
     );
-    const teams = leagueData?.teams ?? [];
-    return teams;
+    teams = leagueData?.teams ?? [];
+  } else {
+    // รวมทีมจากทุกลีก
+    teams = leagueTeams.value.flatMap((league) => league.teams);
   }
-  return [];
+
+  if (searchTerm.value.trim()) {
+    const search = searchTerm.value.toLowerCase().trim();
+    teams = teams.filter((team) => team.name.toLowerCase().includes(search));
+  }
+
+  return teams;
 });
 </script>
 
@@ -145,7 +162,7 @@ const filteredResults = computed(() => {
           <SearchTeam
             :filteredResults="filteredResults"
             @click="handleTeamClick"
-            @search="(searchTerm) => console.log('Search:', searchTerm)"
+            @search="handleSearch"
           />
           <Top5league
             :filteredLeagues="filteredLeagues"
