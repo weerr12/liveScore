@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import type { Team } from "@/types";
+import type { BaseTeam, Team } from "@/types";
 
 const props = defineProps<{
-  filteredResults?: Team[];
+  filteredResults?: BaseTeam[];
 }>();
 
 const emit = defineEmits<{
@@ -80,18 +80,18 @@ watch(searchs, (newSearch) => {
       <div class="max-h-60 overflow-y-auto space-y-2">
         <RouterLink
           v-for="team in filteredResults"
-          :key="team.team.id"
-          :to="`/team/${team.team.id}`"
-          @click="handleTeamClick(team.team.id!)"
+          :key="team.id"
+          :to="`/team/${team.id}`"
+          @click="handleTeamClick(team.id!)"
           class="flex items-center p-3 hover:bg-blue-50 rounded-lg transition-colors group border border-transparent hover:border-blue-200"
         >
           <img
-            :src="team.team.logo"
-            :alt="team.team.name"
+            :src="team.logo"
+            :alt="team.name"
             class="w-8 h-8 mr-3 rounded-full"
           />
           <span class="font-medium text-gray-700 group-hover:text-blue-600">{{
-            team.team.name
+            team.name
           }}</span>
         </RouterLink>
       </div>

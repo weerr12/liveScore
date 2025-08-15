@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
-import type { Team } from "@/types";
+import type { BaseTeam, Team } from "@/types";
 const props = defineProps<{
-  selectedLeagueTeams?: Team[];
+  selectedLeagueTeams?: BaseTeam[];
 }>();
 
 const emit = defineEmits<{
@@ -26,19 +26,20 @@ const handleTeamClick = (teamId: number) => {
     <div class="max-h-80 overflow-y-auto space-y-2">
       <RouterLink
         v-for="team in selectedLeagueTeams"
-        :key="team.team.id"
-        :to="`/team/${team.team.id}`"
-        @click="handleTeamClick(team.team.id!)"
+        :key="team.id"
+        :to="`/team/${team.id}`"
+        @click="handleTeamClick(team.id!)"
         class="flex items-center p-2 hover:bg-purple-50 rounded-lg transition-colors group border border-transparent hover:border-purple-200"
       >
+        <!-- {{ team.id }} -->
         <img
-          :src="team.team.logo"
-          :alt="team.team.name"
+          :src="team.logo"
+          :alt="team.name"
           class="w-6 h-6 mr-3 rounded-full"
         />
         <span
           class="text-sm font-medium text-gray-700 group-hover:text-purple-600"
-          >{{ team.team.name }}
+          >{{ team.name }}
           <!-- {{ team.team.id }} -->
         </span>
       </RouterLink>

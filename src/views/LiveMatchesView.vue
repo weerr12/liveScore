@@ -68,7 +68,7 @@ const selectedLeagueTeams = computed(() => {
     const leagueData = leagueTeams.value.find(
       (item) => item.league.id === selectedLeagueId.value
     );
-    console.log("League Data:", JSON.stringify(leagueData, null, 2));
+    // console.log("League Data:", JSON.stringify(leagueData, null, 2));
     teams = leagueData?.teams || [];
   } else {
     const premierLeague = leagueTeams.value.find(
@@ -77,7 +77,7 @@ const selectedLeagueTeams = computed(() => {
     teams = premierLeague?.teams || [];
   }
   // console.log("Selected League Teams:", JSON.stringify(teams, null, 2));
-  return teams.map((team) => ({ team }));
+  return teams;
 });
 
 const selectedLeagueFixtures = computed(() => {
@@ -123,13 +123,7 @@ const filteredResults = computed(() => {
       (item) => item.league.id === selectedLeagueId.value
     );
     const teams = leagueData?.teams ?? [];
-    // console.log("Filtered Teams:", JSON.stringify(teams, null, 2));
-    const transformedTeams = teams.map((team) => ({ team }));
-    // console.log(
-    //   "Transformed Teams:",
-    //   JSON.stringify(transformedTeams, null, 2)
-    // );
-    return transformedTeams;
+    return teams;
   }
   return [];
 });
