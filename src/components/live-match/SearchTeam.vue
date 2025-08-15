@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import type { BaseTeam, Team } from "@/types";
+import type { BaseTeam } from "@/types";
 
 const props = defineProps<{
   filteredResults?: BaseTeam[];
@@ -25,9 +25,15 @@ watch(searchs, (newSearch) => {
 <template>
   <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
     <div class="flex items-center mb-4">
-      <div class="p-2 bg-blue-100 rounded-lg mr-3">
+      <h2 class="text-lg font-semibold text-gray-800">ค้นหาทีม</h2>
+    </div>
+
+    <div class="relative">
+      <div
+        class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+      >
         <svg
-          class="w-5 h-5 text-blue-600"
+          class="h-5 w-5 text-gray-400"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -40,29 +46,12 @@ watch(searchs, (newSearch) => {
           ></path>
         </svg>
       </div>
-      <h2 class="text-lg font-semibold text-gray-800">ค้นหาทีม</h2>
-    </div>
-
-    <div class="relative">
       <input
         v-model="searchs"
         type="search"
         placeholder="ค้นหาชื่อทีม..."
         class="w-full p-4 pl-12 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
       />
-      <svg
-        class="absolute left-4 top-4 w-4 h-4 text-gray-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-        ></path>
-      </svg>
     </div>
 
     <div
@@ -98,7 +87,7 @@ watch(searchs, (newSearch) => {
     </div>
 
     <div
-      v-else-if="searchs && filteredResults && filteredResults.length === 0"
+      v-else-if="searchs && (!filteredResults || filteredResults.length === 0)"
       class="mt-4"
     >
       <div class="text-center py-6 text-gray-500">

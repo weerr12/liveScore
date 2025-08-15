@@ -35,6 +35,7 @@ const formatTime = (dateString: string) => {
       :to="`/match/${teamStat.team.nextMatch.fixture.id}`"
       class="block text-blue-600 mb-4"
     >
+      <!-- {{ teamStat.team.nextMatch.fixture.id }} -->
       <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6">
         <div class="text-center mb-4">
           <div class="text-lg font-semibold text-gray-800">

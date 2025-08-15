@@ -24,6 +24,7 @@ const props = defineProps<{
         :to="`/match/${match.fixture.id}`"
         class="block p-6 border border-gray-200 rounded-xl hover:shadow-md hover:border-blue-300 transition-all group"
       >
+        <!-- {{ match.fixture.id }} -->
         <div class="flex items-center mb-4">
           <img
             :src="match.league.logo"
