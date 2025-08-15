@@ -218,6 +218,7 @@ export interface MockMatchStats {
         away: string;
     };
     topScorers: Player[];
-    lineups: LineUp;
+    home_lineups: LineUp;
+    away_lineups: LineUp;
 }
 

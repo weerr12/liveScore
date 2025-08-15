@@ -8,6 +8,7 @@ import MatchOdd from "../components/match-info/MatchOdd.vue";
 import MatchInjuries from "../components/match-info/MatchInjuries.vue";
 import MatchLineUp from "../components/match-info/MatchLineUp.vue";
 import type { PlayerLineup } from "@/types/matchH2h";
+import type { MockMatchStats } from "@/types/index";
 
 const route = useRoute();
 const matchId = ref<number>();
@@ -59,7 +60,8 @@ const matchStats = computed(() => {
         time: String(event.time),
       })),
       injuries: match.injuries,
-      lineups: match.lineups,
+      home_lineups: match.home_lineups,
+      away_lineups: match.away_lineups,
       odds: {
         home: match.odds.home,
         draw: match.odds.draw,
