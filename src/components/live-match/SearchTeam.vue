@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import type { BaseTeam } from "@/types";
+import type { Team, Match } from "@/api/types";
 
 const props = defineProps<{
-  filteredResults?: BaseTeam[];
+  filteredResults?: Team[];
 }>();
+
 
 const emit = defineEmits<{
   (e: "click", teamId: number): void;
@@ -59,18 +60,13 @@ watch(searchs, (newSearch) => {
       class="mt-4"
     >
       <div class="text-sm font-medium text-gray-600 mb-3 flex items-center">
-        <span
-          class="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs mr-2"
-        >
-          {{ filteredResults.length }}
-        </span>
         ผลการค้นหา
       </div>
       <div class="max-h-60 overflow-y-auto space-y-2">
         <RouterLink
           v-for="team in filteredResults"
           :key="team.id"
-          :to="`/team/${team.id}`"
+          :to="`/team/${team.id}/overview`"
           @click="handleTeamClick(team.id!)"
           class="flex items-center p-3 hover:bg-blue-50 rounded-lg transition-colors group border border-transparent hover:border-blue-200"
         >
@@ -83,31 +79,6 @@ watch(searchs, (newSearch) => {
             team.name
           }}</span>
         </RouterLink>
-      </div>
-    </div>
-
-    <div
-      v-else-if="searchs && (!filteredResults || filteredResults.length === 0)"
-      class="mt-4"
-    >
-      <div class="text-center py-6 text-gray-500">
-        <svg
-          class="w-12 h-12 mx-auto mb-3 text-gray-300"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6-4h6m2 5.291A7.962 7.962 0 0112 15c-2.34 0-4.29.82-5.657 2.172A7.962 7.962 0 016 15a7.96 7.96 0 00-.657-3.172M19 12a7 7 0 11-14 0 7 7 0 0114 0z"
-          ></path>
-        </svg>
-        <p>
-          ไม่พบทีมที่ชื่อ "<strong>{{ searchs }}</strong
-          >"
-        </p>
       </div>
     </div>
   </div>

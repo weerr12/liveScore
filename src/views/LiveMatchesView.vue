@@ -1,148 +1,140 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from "vue";
 import {
-  mockTeamsByLeague,
-  mockLeagues,
-  mockFixturesToday,
-  mockStandingsByLeague,
-} from "../mock-data";
+  getAllMatches,
+  getAllLeague,
+  getLeagueStandings,
+} from "../api/service";
+import type { Match, League, StandingsResponse } from "@/api/types";
+
 import HeaderLive from "../components/live-match/HeaderLive.vue";
 import SearchTeam from "../components/live-match/SearchTeam.vue";
 import Top5league from "../components/live-match/Top5league.vue";
 import MatchCard from "../components/live-match/MatchCard.vue";
 import Standing from "../components/live-match/Standing.vue";
 import LeagueTeam from "../components/live-match/LeagueTeam.vue";
-import type {
-  League,
-  TeamStanding,
-  Fixture,
-  LeagueTeamType,
-  BaseTeam,
-} from "@/types";
 
 const leagues = ref<League[]>([]);
-// เปลี่ยนให้ตรง mockTeamsByLeague
-const leagueTeams = ref<LeagueTeamType[]>([]);
-const standings = ref<TeamStanding[]>([]);
-const fixturesToday = ref<Fixture[]>([]);
+const matches = ref<Match[]>([]);
+const standings = ref<StandingsResponse>();
 const selectedLeagueId = ref<number>();
 const selectedTeamId = ref<number>();
 const isLoading = ref(false);
-const searchTerm = ref<string>("");
+const searchTerm = ref("");
 
-const bigFiveLeagueIds = [39, 140, 135, 78, 61];
+const topFiveLeague = [39, 140, 135, 78, 61];
+const defaultLeagueId = 39; // Premier League
 
-const loadData = () => {
-  isLoading.value = true;
-  // ปกติถ้าใช้ API
-  // leagues.value = await getLeagues();
-  leagues.value = mockLeagues;
-  fixturesToday.value = mockFixturesToday;
-  leagueTeams.value = mockTeamsByLeague;
-  standings.value = mockStandingsByLeague;
-
-  isLoading.value = false;
+const fetchLeagues = async () => {
+  try {
+    const res = await getAllLeague();
+    if (res.data.success) {
+      leagues.value = res.data.data;
+    }
+  } catch (error) {
+    console.error("Error fetching leagues:", error);
+  }
 };
 
-onMounted(loadData);
+const fetchMatches = async () => {
+  try {
+    const res = await getAllMatches();
+    if (res.data.success) {
+      matches.value = res.data.data;
+    }
+  } catch (error) {
+    console.error("Error fetching matches:", error);
+  }
+};
 
-watch(selectedLeagueId, () => {
-  selectedTeamId.value = undefined;
-  searchTerm.value = "";
-});
+const fetchStandings = async () => {
+  try {
+    const res = await getLeagueStandings(
+      selectedLeagueId.value || defaultLeagueId
+    );
+    if (res.data.success) {
+      standings.value = res.data.data;
+    }
+  } catch (error) {
+    console.error("Error fetching standings:", error);
+  }
+};
 
 const filteredLeagues = computed(() =>
-  leagues.value.filter(
-    (league) =>
-      bigFiveLeagueIds.includes(league.league.id) &&
-      ["England", "Spain", "Italy", "Germany", "France"].includes(
-        league.country.name
-      )
-  )
+  leagues.value.filter((league) => topFiveLeague.includes(league.id))
 );
 
-// ถ้าเลือกลีกแล้ว → แสดงทีมในลีกนั้น, ถ้าไม่เลือก → default Premier League id -> 39
 const selectedLeagueTeams = computed(() => {
-  let teams: BaseTeam[] = [];
-
-  // user เลือกลีก
-  if (selectedLeagueId.value) {
-    const leagueData = leagueTeams.value.find(
-      (item) => item.league.id === selectedLeagueId.value
-    );
-    // console.log("League Data:", JSON.stringify(leagueData, null, 2));
-    teams = leagueData?.teams || [];
-  } else {
-    const premierLeague = leagueTeams.value.find(
-      (item) => item.league.id === 39
-    );
-    teams = premierLeague?.teams || [];
-  }
-  // console.log("Selected League Teams:", JSON.stringify(teams, null, 2));
-  return teams;
+  if (!standings.value?.standings) return [];
+  return standings.value.standings.map((standing) => ({
+    id: standing.team.id,
+    name: standing.team.name,
+    logo: standing.team.logo,
+  }));
 });
 
 const selectedLeagueFixtures = computed(() => {
-  if (selectedLeagueId.value) {
-    return fixturesToday.value.filter(
-      (match) => match.league.id === selectedLeagueId.value
-    );
-  }
-  return [];
+  if (!selectedLeagueId.value) return [];
+  return matches.value.filter(
+    (match) => match.league.id === selectedLeagueId.value
+  );
 });
 
 const selectedTeamFixtures = computed(() => {
-  if (selectedTeamId.value) {
-    return fixturesToday.value.filter(
-      (match) =>
-        match.teams.home.id === selectedTeamId.value ||
-        match.teams.away.id === selectedTeamId.value
-    );
-  }
-  return [];
+  if (!selectedTeamId.value) return [];
+  return matches.value.filter(
+    (match) =>
+      match.homeTeam.id === selectedTeamId.value ||
+      match.awayTeam.id === selectedTeamId.value
+  );
 });
 
 const displayFixtures = computed(() => {
   if (selectedTeamFixtures.value.length > 0) return selectedTeamFixtures.value;
   if (selectedLeagueFixtures.value.length > 0)
     return selectedLeagueFixtures.value;
-  return fixturesToday.value;
+  return matches.value;
 });
 
-const handleLeagueClick = (leagueId: number) => {
-  if (selectedLeagueId.value !== leagueId) {
-    selectedLeagueId.value = leagueId;
-  }
-};
-
-const handleTeamClick = (teamId: number) => {
-  selectedTeamId.value = teamId;
-};
-
-const handleSearch = (search: string) => {
-  searchTerm.value = search;
-};
-
 const filteredResults = computed(() => {
-  let teams: BaseTeam[] = [];
-
-  // ถ้าเลือกลีก ให้ใช้ทีมในลีกนั้น, ถ้าไม่เลือก ให้ใช้ทีมทั้งหมด
-  if (selectedLeagueId.value) {
-    const leagueData = leagueTeams.value.find(
-      (item) => item.league.id === selectedLeagueId.value
-    );
-    teams = leagueData?.teams ?? [];
-  } else {
-    // รวมทีมจากทุกลีก
-    teams = leagueTeams.value.flatMap((league) => league.teams);
-  }
+  if (!standings.value?.standings) return [];
+  let teams = selectedLeagueTeams.value;
 
   if (searchTerm.value.trim()) {
     const search = searchTerm.value.toLowerCase().trim();
     teams = teams.filter((team) => team.name.toLowerCase().includes(search));
   }
-
   return teams;
+});
+
+const handleLeagueClick = (leagueId: number) => {
+  if (selectedLeagueId.value !== leagueId) {
+    selectedLeagueId.value = leagueId;
+    selectedTeamId.value = undefined;
+    searchTerm.value = "";
+  }
+};
+
+const handleTeamClick = (teamId: number) => {
+  selectedTeamId.value = teamId;
+  // console.log("Selected team ID:", selectedTeamId.value);
+};
+
+const handleSearch = (search: string) => {
+  searchTerm.value = search;
+  // console.log("Search term:", searchTerm.value);
+};
+
+watch(selectedLeagueId, (newLeagueId) => {
+  if (newLeagueId) {
+    fetchStandings();
+  }
+});
+
+onMounted(async () => {
+  fetchLeagues();
+  fetchMatches();
+  fetchStandings();
 });
 </script>
 
@@ -157,28 +149,30 @@ const filteredResults = computed(() => {
         ></div>
         <span class="ml-3 text-lg text-gray-600">กำลังโหลดข้อมูล...</span>
       </div>
+
       <div v-else class="grid lg:grid-cols-3 gap-8 mt-4">
         <div class="lg:col-span-1 space-y-6">
           <SearchTeam
-            :filteredResults="filteredResults"
+            :filtered-results="filteredResults"
             @click="handleTeamClick"
             @search="handleSearch"
           />
           <Top5league
-            :filteredLeagues="filteredLeagues"
-            :selectedLeagueId="selectedLeagueId"
-            @leagueClick="handleLeagueClick"
+            :filtered-leagues="filteredLeagues"
+            :selected-league-id="selectedLeagueId"
+            @league-click="handleLeagueClick"
           />
           <LeagueTeam
-            :selectedLeagueTeams="selectedLeagueTeams"
-            @teamClick="handleTeamClick"
+            :selected-league-teams="selectedLeagueTeams"
+            @team-click="handleTeamClick"
           />
         </div>
+
         <div class="lg:col-span-2 space-y-6">
-          <MatchCard :displayFixtures="displayFixtures" />
+          <MatchCard :display-fixtures="displayFixtures" />
           <Standing
             :standings="standings"
-            :selectedLeagueId="selectedLeagueId"
+            :selected-league-id="selectedLeagueId"
           />
         </div>
       </div>

@@ -1,17 +1,26 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from "vue-router";
-import { onMounted, ref, computed } from "vue";
-import { mockFixturesToday } from "../mock-data";
-import type { Color, NavItem } from "@/types";
+import { computed, ref, watchEffect } from "vue";
+import type { NavItem } from "@/api/types";
+import { getMatchById } from "@/api/service";
 
 const route = useRoute();
-const isLoading = ref(true);
 
-const fixtureId = computed(() => Number(route.params.fixtureId));
+const matchId = computed(() => Number(route.params.matchId));
+const fixtureId = ref<number>();
 
-const currentMatch = computed(() =>
-  mockFixturesToday.find((fixture) => fixture.fixture.id === fixtureId.value)
-);
+watchEffect(async () => {
+  if (matchId.value) {
+    try {
+      const response = await getMatchById(matchId.value);
+      if (response.data.success) {
+        fixtureId.value = response.data.data.fixtureId;
+      }
+    } catch (error) {
+      console.error("Error fetching match data:", error);
+    }
+  }
+});
 
 const navItems: NavItem[] = [
   {
@@ -25,7 +34,7 @@ const navItems: NavItem[] = [
     label: "สรุป",
     description: "สรุปการแข่งขัน",
     color: "green",
-    to: (id?: number) => ({ name: "match-info", params: { fixtureId: id } }),
+    to: (id?: number) => ({ name: "match-info", params: { matchId: id } }),
     isActive: (name) => name === "match-info",
   },
   {
@@ -34,15 +43,11 @@ const navItems: NavItem[] = [
     color: "purple",
     to: (id?: number) => ({
       name: "match-details-view",
-      params: { fixtureId: id },
+      params: { matchId: id, fixtureId: fixtureId.value },
     }),
     isActive: (name) => name === "match-details-view",
   },
 ];
-
-onMounted(() => {
-  isLoading.value = false;
-});
 </script>
 
 <template>
@@ -58,7 +63,7 @@ onMounted(() => {
             <RouterLink
               v-for="item in navItems"
               :key="item.label"
-              :to="item.to(fixtureId)"
+              :to="item.to(matchId)"
               class="group relative flex items-center space-x-4 px-8 py-4 rounded-xl transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:shadow-lg transform hover:-translate-y-0.5"
               :class="
                 item.isActive(route.name)
@@ -109,9 +114,7 @@ onMounted(() => {
         <div
           class="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-50 to-transparent opacity-30 rounded-full transform -translate-x-24 translate-y-24"
         ></div>
-        <div class="relative z-10 p-8">
-          <RouterView />
-        </div>
+        <RouterView />
       </div>
     </main>
   </div>

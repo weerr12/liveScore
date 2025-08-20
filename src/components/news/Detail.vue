@@ -1,38 +1,47 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { mockNews } from "../../mock-data";
-import type { NewsItem } from "@/types";
+import { getNewsArticleById } from "@/api/service";
+import type { News } from "@/api/types";
 
 const route = useRoute();
-const router = useRouter();
-const newsId = ref<number>();
-const newsItem = ref<NewsItem | null>(null);
+const newsId = computed(() => Number(route.params.id));
+const newsItem = ref<News | null>(null);
+const loading = ref(true);
 
-const formatNumber = (num: number) => {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + "M";
-  } else if (num >= 1000) {
-    return (num / 1000).toFixed(1) + "K";
+const fetchNewsDetail = async (id: number) => {
+  try {
+    const response = await getNewsArticleById(id);
+    if (response.data.success) {
+      newsItem.value = response.data.data;
+    }
+  } catch (error) {
+    console.error("Error fetching news detail:", error);
   }
-  return num.toString();
 };
 
 onMounted(() => {
-  newsId.value = Number(route.params.id);
-
-  const foundNews = mockNews.find((news) => news.id === newsId.value);
-
-  if (foundNews) {
-    newsItem.value = foundNews;
-  } else {
-    router.push("/news");
-  }
+  fetchNewsDetail(newsId.value);
+  setTimeout(() => {
+    loading.value = false;
+  }, 300);
 });
 </script>
 
 <template>
-  <div v-if="newsItem" class="min-h-screen bg-gray-50">
+  <div
+    v-if="loading"
+    class="min-h-screen bg-gray-50 flex items-center justify-center"
+  >
+    <div class="text-center">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"
+      ></div>
+      <p class="text-gray-600">กำลังโหลดข่าว...</p>
+    </div>
+  </div>
+
+  <div v-else-if="newsItem" class="min-h-screen bg-gray-50">
     <div class="mx-auto px-6 py-4">
       <button
         @click="$router.push('/news')"
@@ -50,7 +59,7 @@ onMounted(() => {
           {{ newsItem.title }}
         </h1>
 
-        <div class="mb-8 rounded-xl overflow-hidden shadow-lg">
+        <div class="mb-8 rounded-2xl overflow-hidden shadow-lg">
           <img
             :src="newsItem.image"
             :alt="newsItem.title"
@@ -65,27 +74,10 @@ onMounted(() => {
             <span class="text-gray-600 font-medium">{{ newsItem.source }}</span>
           </div>
 
-          <div v-if="newsItem.views" class="flex items-center text-gray-500">
-            <svg
-              class="w-4 h-4 mr-1"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              ></path>
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-              ></path>
-            </svg>
-            {{ formatNumber(newsItem.views) }} views
+          <div class="flex items-center text-gray-500">
+            <span class="text-sm">{{
+              new Date(newsItem.publishedAt).toLocaleDateString("th-TH")
+            }}</span>
           </div>
         </div>
 
@@ -93,21 +85,13 @@ onMounted(() => {
           class="prose prose-lg max-w-none bg-white p-8 rounded-lg shadow-sm"
         >
           <p class="text-lg text-gray-700 leading-relaxed mb-6">
-            {{ newsItem.summary }}
+            {{ newsItem.description }}
           </p>
-        </div>
 
-        <div class="mt-8">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">แท็ก</h3>
-          <div class="flex flex-wrap gap-2">
-            <span
-              v-for="tag in newsItem.tags"
-              :key="tag"
-              class="bg-blue-50 text-blue-700 text-sm font-medium px-4 py-2 rounded-full border border-blue-200 hover:bg-blue-100 transition-colors"
-            >
-              {{ tag }}
-            </span>
-          </div>
+          <div
+            class="text-gray-800 leading-relaxed"
+            v-html="newsItem.content"
+          ></div>
         </div>
       </div>
     </article>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
-import type { BaseTeam, Team } from "@/types";
-const props = defineProps<{
-  selectedLeagueTeams?: BaseTeam[];
-}>();
+import type { Team, Match } from "@/api/types";
 
+const props = defineProps<{
+  selectedLeagueTeams?: Team[];
+}>();
 const emit = defineEmits<{
   (e: "teamClick", teamId: number): void;
 }>();
@@ -24,10 +24,11 @@ const handleTeamClick = (teamId: number) => {
     </div>
 
     <div class="max-h-80 overflow-y-auto space-y-2">
+      <!-- :to="`/team/${match.id}/overview`" -->
       <RouterLink
         v-for="team in selectedLeagueTeams"
         :key="team.id"
-        :to="`/team/${team.id}`"
+        :to="`/team/${team.id}/overview`"
         @click="handleTeamClick(team.id!)"
         class="flex items-center p-2 hover:bg-purple-50 rounded-lg transition-colors group border border-transparent hover:border-purple-200"
       >

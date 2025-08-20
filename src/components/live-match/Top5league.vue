@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { League } from "@/types";
+import type { League } from "@/api/types";
 
 // emit ลูก -> แม่
 // ลูกจะส่ง handleLeagueClick กลับไปที่แม่
@@ -11,6 +11,12 @@ const props = defineProps<{
   filteredLeagues: League[];
   selectedLeagueId?: number;
 }>();
+
+// export interface League {
+//     id: number;
+//     name: string;
+//     logo: string;
+// }
 
 const emit = defineEmits<{
   (e: "leagueClick", leagueId: number): void;
@@ -40,31 +46,26 @@ const handleLeagueClick = (leagueId: number) => {
     <div class="space-y-2">
       <button
         v-for="league in filteredLeagues"
-        :key="league.league.id"
-        @click="handleLeagueClick(league.league.id)"
+        :key="league.id"
+        @click="handleLeagueClick(league.id)"
         class="w-full flex items-center p-3 rounded-lg transition-all group hover:bg-blue-50 border border-transparent hover:border-blue-200"
         :class="
-          selectedLeagueId === league.league.id
-            ? 'bg-blue-100 border-blue-300'
-            : ''
+          selectedLeagueId === league.id ? 'bg-blue-100 border-blue-300' : ''
         "
       >
         <img
-          :src="league.league.logo"
-          :alt="league.league.name"
-          class="w-8 h-8 mr-3 rounded-full"
+          :src="league.logo"
+          :alt="league.name"
+          class="w-8 h-8 mr-3 rounded-full object-contain"
         />
         <div class="text-left">
           <div
             class="font-medium text-gray-700 group-hover:text-blue-600"
-            :class="
-              selectedLeagueId === league.league.id ? 'text-blue-600' : ''
-            "
+            :class="selectedLeagueId === league.id ? 'text-blue-600' : ''"
           >
-            {{ league.league.name }}
+            {{ league.name }}
             <!-- {{ league.league.id }} -->
           </div>
-          <div class="text-xs text-gray-500">{{ league.country.name }}</div>
         </div>
       </button>
     </div>

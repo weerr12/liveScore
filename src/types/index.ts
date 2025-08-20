@@ -111,19 +111,6 @@ export interface NextMatch {
     home?: boolean;
 }
 
-export interface NewsItem {
-    id: number;
-    title: string;
-    summary: string;
-    image: string;
-    category: string;
-    date: string;
-    views?: number;
-    readTime?: string;
-    source: string;
-    tags: string[];
-}
-
 export interface H2HData {
     team1: Team;
     team2: Team;
@@ -162,13 +149,6 @@ export interface Injury {
     date: string;
 }
 
-export interface Injury {
-    player: string;
-    team: BasicTeam;
-    reason: string;
-    date: string;
-}
-
 export type Color = "indigo" | "green" | "purple";
 
 export type NavItem = {
@@ -188,37 +168,5 @@ export interface MatchEvent {
     team: BasicTeam;
 }
 
-export interface MockMatchStats {
-    fixture: FixtureInfo;
-    league: BaseLeague;
-    teams: {
-        home: BaseTeam;
-        away: BaseTeam;
-    };
-    goals: {
-        home: number | null;
-        away: number | null;
-    };
-    score?: {
-        halftime: {
-            home: number | null;
-            away: number | null;
-        };
-        fulltime: {
-            home: number | null;
-            away: number | null;
-        };
-    };
-    statistics: TeamMatchStats[];
-    events: MatchEvent[];
-    injuries: Injury[];
-    odds: {
-        home: string;
-        draw: string;
-        away: string;
-    };
-    topScorers: Player[];
-    home_lineups: LineUp;
-    away_lineups: LineUp;
-}
+
 

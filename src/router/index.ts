@@ -25,7 +25,7 @@ const router = createRouter({
       component: TeamStatistic,
       children: [
         {
-          path: '',
+          path: 'overview',
           name: 'team-overview',
           component: TeamOverView,
         },
@@ -42,7 +42,7 @@ const router = createRouter({
       ],
     },
     {
-      path: '/match/:fixtureId',
+      path: '/match/:matchId',
       name: 'match-details',
       component: MatchDetail,
       children: [
@@ -52,7 +52,7 @@ const router = createRouter({
           component: MatchInfo,
         },
         {
-          path: 'h2h',
+          path: 'fixtureId/:fixtureId',
           name: 'match-details-view',
           component: MatchH2h,
         }

@@ -1,11 +1,23 @@
 <script setup lang="ts">
-import { mockNews } from "../mock-data";
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { RouterLink } from "vue-router";
 import NewsCard from "../components/news/NewsCard.vue";
-import type { NewsItem } from "@/types";
 
-const news = ref<NewsItem[]>([]);
+import { getNewsList } from "@/api/service";
+import type { News } from "@/api/types";
+
+const news = ref<News[]>([]);
+
+const fetchNews = async () => {
+  try {
+    const response = await getNewsList();
+    if (response.data.success) {
+      news.value = response.data.data;
+    }
+  } catch (error) {
+    console.error("Error fetching news:", error);
+  }
+};
 
 const formatThaiDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString("th-TH", {
@@ -26,7 +38,7 @@ const formatNumber = (num: number) => {
 };
 
 onMounted(() => {
-  news.value = mockNews;
+  fetchNews();
 });
 </script>
 

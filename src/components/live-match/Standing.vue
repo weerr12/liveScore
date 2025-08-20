@@ -1,29 +1,34 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { RouterLink } from "vue-router";
-import type { TeamStanding } from "@/types";
+import type { StandingsResponse } from "@/api/types";
 
 const props = defineProps<{
   selectedLeagueId?: number;
-  standings: TeamStanding[];
+  standings: StandingsResponse | undefined;
 }>();
 
 const selectedLeagueStandings = computed(() => {
-  if (!props.selectedLeagueId) return [];
-  const leagueData = props.standings.find(
-    (standing) => standing.league.id === props.selectedLeagueId
-  );
-  return leagueData?.stats ?? [];
+  if (!props.standings) return [];
+  return props.standings.standings;
 });
 </script>
 
 <template>
   <section
-    v-if="selectedLeagueId"
+    v-if="selectedLeagueId && selectedLeagueStandings.length > 0"
     class="bg-white rounded-xl shadow-lg p-6 border border-gray-100"
   >
     <div class="flex items-center mb-6">
-      <h2 class="text-xl font-semibold text-gray-800">ตารางคะแนน</h2>
+      <img
+        v-if="standings?.league.logo"
+        :src="standings.league.logo"
+        :alt="standings.league.name"
+        class="w-8 h-8 mr-3"
+      />
+      <h2 class="text-xl font-semibold text-gray-800">
+        ตารางคะแนน {{ standings?.league.name }}
+      </h2>
     </div>
 
     <div class="overflow-x-auto">
@@ -84,7 +89,7 @@ const selectedLeagueStandings = computed(() => {
                     : 'bg-gray-200 text-gray-700'
                 "
               >
-                {{ team.rank }}
+                {{ team.position }}
               </span>
             </td>
             <td class="p-3">
@@ -95,7 +100,7 @@ const selectedLeagueStandings = computed(() => {
                 <img
                   :src="team.team.logo"
                   :alt="team.team.name"
-                  class="w-8 h-8 mr-3 rounded-full"
+                  class="w-8 h-8 mr-3 rounded-full object-contain"
                 />
                 <span class="font-medium text-sm"
                   >{{ team.team.name }}
@@ -107,25 +112,25 @@ const selectedLeagueStandings = computed(() => {
               {{ team.played }}
             </td>
             <td class="p-3 text-center text-sm font-medium text-green-600">
-              {{ team.win }}
+              {{ team.wins }}
             </td>
             <td class="p-3 text-center text-sm font-medium text-yellow-600">
-              {{ team.draw }}
+              {{ team.draws }}
             </td>
             <td class="p-3 text-center text-sm font-medium text-red-600">
-              {{ team.lose }}
+              {{ team.losses }}
             </td>
             <td
               class="p-3 text-center text-sm font-medium"
               :class="
-                team.goalDiff > 0
+                team.goalDifference > 0
                   ? 'text-green-600'
-                  : team.goalDiff < 0
+                  : team.goalDifference < 0
                   ? 'text-red-600'
                   : 'text-gray-600'
               "
             >
-              {{ team.goalDiff > 0 ? "+" : "" }}{{ team.goalDiff }}
+              {{ team.goalDifference > 0 ? "+" : "" }}{{ team.goalDifference }}
             </td>
             <td class="p-3 text-center font-bold text-blue-600">
               {{ team.points }}

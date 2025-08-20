@@ -1,112 +1,78 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router";
 import { onMounted, ref, computed } from "vue";
-import { mockH2HWithFixtures } from "../mock-data";
-import MatchVs from "../components/match-h2h/MatchVs.vue";
-import MatchHistory from "../components/match-h2h/MatchHistory.vue";
-import type { MatchResult } from "@/types";
-import type { H2HData, Fixture } from "@/types/matchH2h";
+import H2HHeader from "../components/match-h2h/H2HHeader.vue";
+import H2HTeamsComparison from "../components/match-h2h/H2HTeamsCompare.vue";
+import H2HStatistics from "../components/match-h2h/H2HStatistics.vue";
 
-const RESULT_COLORS = {
-  WIN: "bg-green-500",
-  LOSE: "bg-red-500",
-  DRAW: "bg-yellow-500",
-  DEFAULT: "bg-gray-300",
-} as const;
-
-const RESULT_TEXT: Record<MatchResult, string> = {
-  WIN: "ชนะ",
-  LOSE: "แพ้",
-  DRAW: "เสมอ",
-};
-
-const RESULT_TEXT_COLORS: Record<MatchResult, string> = {
-  WIN: "text-green-600",
-  LOSE: "text-red-600",
-  DRAW: "text-yellow-600",
-};
+// api จริงๆ
+import { getMatchDataByFixtureId } from "@/api/service";
+import type { Match } from "@/api/types";
 
 const route = useRoute();
-const matchId = ref<number>();
 const isLoading = ref(true);
+const matchH2hData = ref<Match>();
 
-const parseScore = (scoreString: string): { home: number; away: number } => {
-  const [home = 0, away = 0] = scoreString.split("-").map(Number);
-  return { home, away };
-};
+const fixtureId = computed(() => Number(route.params.fixtureId));
 
-const getMatchResult = (
-  fixture: Fixture,
-  referenceTeam: string
-): MatchResult => {
-  const { home: homeScore, away: awayScore } = parseScore(fixture.score);
-
-  if (homeScore === awayScore) return "DRAW";
-
-  const isReferenceTeamHome = fixture.home === referenceTeam;
-
-  const didReferenceTeamWin = isReferenceTeamHome
-    ? homeScore > awayScore
-    : awayScore > homeScore;
-
-  return didReferenceTeamWin ? "WIN" : "LOSE";
-};
-
-const getTeamLogo = (teamName: string): string => {
-  if (!matchH2h.value) return "";
-
-  const { home, away } = matchH2h.value.teams;
-  return teamName === home.name
-    ? home.logo
-    : teamName === away.name
-    ? away.logo
-    : "";
-};
-
-const getMatchResultColor = (
-  fixture: Fixture,
-  homeTeamName: string
-): string => {
-  const result = getMatchResult(fixture, homeTeamName);
-  return RESULT_COLORS[result];
-};
-
-const getResultTextClass = (result: MatchResult): string => {
-  return RESULT_TEXT_COLORS[result];
-};
-
-const matchH2h = computed((): H2HData | null => {
-  if (!matchId.value) return null;
-
-  for (const league of mockH2HWithFixtures) {
-    const match = league.fixtures.find(
-      (fixture) => fixture.fixture_id === matchId.value
-    );
-
-    if (match) {
-      return {
-        league: league.league,
-        teams: league.teams,
-        fixtures: league.fixtures,
-      };
+const fetchMatchH2h = async () => {
+  try {
+    const response = await getMatchDataByFixtureId(fixtureId.value);
+    if (response.data.success) {
+      matchH2hData.value = response.data.data;
     }
+  } catch (error) {
+    console.error("Error fetching H2H data:", error);
   }
+};
 
-  return null;
+const matchH2h = computed(() => {
+  if (!matchH2hData.value) return null;
+
+  const match = matchH2hData.value;
+
+  return {
+    id: match.id,
+    fixture_id: match.fixtureId,
+    date: match.date,
+    status: {
+      short: match.status,
+      long:
+        match.status === "LIVE"
+          ? "Live"
+          : match.status === "FT"
+          ? "Full Time"
+          : "Scheduled",
+    },
+    league: match.league,
+    teams: {
+      home: match.homeTeam,
+      away: match.awayTeam,
+    },
+    goals: {
+      home: match.score.home,
+      away: match.score.away,
+    },
+    score: {
+      fulltime: { home: match.score.home, away: match.score.away },
+    },
+  };
 });
 
-const sortedFixtures = computed(() => {
-  if (!matchH2h.value?.fixtures) return [];
-
-  return [...matchH2h.value.fixtures].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-});
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("th-TH", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 onMounted(() => {
-  matchId.value = parseInt(route.params.fixtureId as string);
-  console.log("Match ID:", matchId.value);
-
+  fetchMatchH2h();
   setTimeout(() => {
     isLoading.value = false;
   }, 300);
@@ -128,15 +94,30 @@ onMounted(() => {
     </div>
     <div class="max-w-6xl mx-auto px-6 py-8">
       <div v-if="!isLoading && matchH2h" class="space-y-8">
-        <MatchVs :matchH2h="matchH2h" />
-        <MatchHistory
-          :matchH2h="matchH2h"
-          :sortedFixtures="sortedFixtures"
-          :getTeamLogo="getTeamLogo"
-          :getResultTextClass="getResultTextClass"
-          :getMatchResult="getMatchResult"
-          :getMatchResultColor="getMatchResultColor"
+        <div
+          class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden"
+        >
+          <H2HHeader :leagueName="matchH2h.league.name" />
+
+          <H2HTeamsComparison
+            :teams="matchH2h.teams"
+            :goals="matchH2h.goals"
+            :status="matchH2h.status"
+            :date="matchH2h.date"
+            :formatDate="formatDate"
+          />
+        </div>
+
+        <H2HStatistics
+          :teams="matchH2h.teams"
+          :score="matchH2h.score"
+          :status="matchH2h.status"
+          :date="matchH2h.date"
+          :league="matchH2h.league"
+          :formatDate="formatDate"
         />
+
+        <!-- <H2HMatchHistory /> -->
       </div>
 
       <div v-else-if="!isLoading && !matchH2h" class="text-center py-16">
